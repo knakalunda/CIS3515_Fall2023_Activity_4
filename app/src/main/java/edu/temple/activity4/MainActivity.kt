@@ -20,6 +20,8 @@ class MainActivity : AppCompatActivity() {
         textSizeSelector = findViewById(R.id.textSizeSelectorRecyclerView)
         textSizeDisplay = findViewById(R.id.textSizeDisplayTextView)
 
+     //   val someFunction : (Int, Int) -> Unit = {x: Int, y: Int -> textSizeDisplay.textSize = (x + y).toFloat()}
+
         // Trying to create array of integers that are multiples of 5
         // Verify correctness by examining array values.
         val textSizes = Array(20) { (it + 1) * 5 }
@@ -28,20 +30,31 @@ class MainActivity : AppCompatActivity() {
             Log.d("Array values", textSizes[i].toString())
         }
 
-        textSizeSelector.adapter = TextSizeAdapter(textSizes)
-        textSizeSelector.layoutManager = LinearLayoutManager(this)
+        with(findViewById<RecyclerView>(R.id.textSizeSelectorRecyclerView)){
+            adapter = TextSizeAdapter(textSizes){   //if a lambda is the last item in a function it can be placed outside the ()
+                textSizeDisplay.textSize = it
+            }
+            layoutManager = LinearLayoutManager(this@MainActivity)
+        }
+        /*textSizeSelector.adapter = TextSizeAdapter(textSizes)
+        textSizeSelector.layoutManager = LinearLayoutManager(this) */
     }
 
 
     /* Convert to RecyclerView.Adapter */
-    class TextSizeAdapter(_textSizes: Array<Int>) :
+    class TextSizeAdapter(_textSizes: Array<Int>, _callback : (Float) -> Unit) :
         RecyclerView.Adapter<TextSizeAdapter.TextSizeViewHolder>() {
-        private val textSizes = _textSizes
+         val callback = _callback
+         val textSizes = _textSizes
 
-        class TextSizeViewHolder(view: TextView) : RecyclerView.ViewHolder(view) {
-            val textview = view
+       inner class TextSizeViewHolder(view: TextView) : RecyclerView.ViewHolder(view) { //inner class can't exist without Adapter
+            val textView = view
+            //Only at the time a view is assigned, a new callback is created
+            init{
+                textView.setOnClickListener{callback(textSizes[adapterPosition].toFloat())}
         }
 
+    }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextSizeViewHolder {
             return TextSizeViewHolder(TextView(parent.context).apply { setPadding(5, 20, 0, 20) })
         }
@@ -51,9 +64,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onBindViewHolder(holder: TextSizeViewHolder, position: Int) {
-            holder.textview.text = textSizes[position].toString()
-            holder.textview.textSize = textSizes[position].toFloat()
+            holder.textView.apply{
+                text = textSizes[position].toString()
+                textSize = textSizes[position].toFloat()
+            }
+            /* holder.textview.text = textSizes[position].toString()
+             holder.textview.textSize = textSizes[position].toFloat() */
         }
-
+        }
     }
-}
